@@ -23,7 +23,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;min-height:100%}
+html,body{margin:0;min-height:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
 body{background:var(--bg-deep);color:var(--ink);font:15px/1.45 var(--sans);
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior-y:none}
 button,input,select{font:inherit;color:inherit}
@@ -138,11 +138,13 @@ footer details[open] summary::after{content:"－"}
 .cup-eff{text-align:center;color:var(--muted);font-size:13px;margin-bottom:12px}
 input[type=range]{width:100%;accent-color:var(--amber);height:28px}
 .presets{display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap}
-.presets button{flex:1;min-width:60px;height:38px;border-radius:11px;background:var(--card);border:1px solid var(--line);font:600 13px var(--mono)}
+.presets button{flex:1;min-width:60px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:11px;background:var(--card);border:1px solid var(--line);font:600 13px var(--mono)}
+.presets button small{font:500 10px var(--sans);color:var(--muted)}
 .presets button.on{border-color:var(--amber);color:var(--amber)}
+.presets button.on small{color:var(--amber)}
 .field{margin-bottom:14px}
 .field label{display:block;margin-bottom:6px}
-.field input,.field select{width:100%;height:46px;border-radius:12px;background:var(--card);border:1px solid var(--line);padding:0 12px;font-family:var(--mono)}
+.field input,.field select{font-size:16px;width:100%;height:46px;border-radius:12px;background:var(--card);border:1px solid var(--line);padding:0 12px;font-family:var(--mono)}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .note{font-size:12.5px;color:var(--muted);background:rgba(13,21,38,.55);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:14px}
 .note b{color:var(--ink)}
@@ -263,7 +265,7 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
     <div class="cup-wrap"><svg viewBox="0 0 170 210" id="cup"></svg></div>
     <div class="cup-ml" id="add-ml">250 ml</div>
     <div class="cup-eff" id="add-eff"></div>
-    <input type="range" id="add-range" min="50" max="1000" step="10" value="250" aria-label="Quantité en millilitres">
+    <input type="range" id="add-range" min="20" max="1000" step="10" value="250" aria-label="Quantité en millilitres">
     <div class="presets" id="presets"></div>
     <button class="btn btn-amber" style="width:100%;height:56px;font-size:17px" id="add-go">＋ EAU</button>
     <h2 id="add-title" hidden>Ajouter</h2>
@@ -321,8 +323,14 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
 "use strict";
 /* ====== Version & journal des modifications ======
    À chaque modification : augmente APP_VERSION (et VERSION dans sw.js), ajoute une entrée en haut de CHANGELOG. */
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.1.0";
 const CHANGELOG = [
+  { v: "1.1.0", d: "01/11/2026", items: [
+    "Formats adaptés à chaque boisson : expresso (40 ml), ristretto, double, allongé pour le café ; tasse, mug, théière pour le thé et l'infusion",
+    "Quantité minimale abaissée à 20 ml",
+    "Le gobelet se remplit à l'échelle de la boisson choisie",
+    "Correction : l'écran ne se décale plus sur le côté après avoir touché un champ des réglages"
+  ]},
   { v: "1.0.0", d: "01/11/2026", items: [
     "Première version de Le Plein",
     "Jauge de réservoir animée et objectif du jour",
@@ -339,14 +347,14 @@ const CHANGELOG = [
 const $ = id => document.getElementById(id);
 const STORE = "leplein.v1";
 const DRINKS = [
-  { id:"eau",      n:"Eau",      c:"#5dade2", k:1,   def:250 },
-  { id:"the",      n:"Thé",      c:"#7fd8a8", k:.9,  def:250 },
-  { id:"infusion", n:"Infusion", c:"#c3a3e6", k:1,   def:250 },
-  { id:"cafe",     n:"Café",     c:"#9a6646", k:.8,  def:150 },
-  { id:"lait",     n:"Lait",     c:"#eae6dc", k:.9,  def:200 },
-  { id:"jus",      n:"Jus",      c:"#f5a623", k:.9,  def:200 },
-  { id:"soda",     n:"Soda",     c:"#e85d4f", k:.9,  def:330 },
-  { id:"soupe",    n:"Soupe",    c:"#e8c547", k:.9,  def:250 }
+  { id:"eau",      n:"Eau",      c:"#5dade2", k:1,  def:250, max:1000, p:[[150,"Petit verre"],[250,"Verre"],[330,"Grand verre"],[500,"Bouteille"],[750,"Gourde"]] },
+  { id:"the",      n:"Thé",      c:"#7fd8a8", k:.9, def:250, max:600,  p:[[150,"Tasse"],[250,"Mug"],[350,"Grand mug"],[500,"Théière"]] },
+  { id:"infusion", n:"Infusion", c:"#c3a3e6", k:1,  def:250, max:600,  p:[[150,"Tasse"],[250,"Mug"],[350,"Grand mug"],[500,"Théière"]] },
+  { id:"cafe",     n:"Café",     c:"#9a6646", k:.8, def:40,  max:400,  p:[[30,"Ristretto"],[40,"Expresso"],[80,"Double"],[120,"Allongé"],[250,"Mug"]] },
+  { id:"lait",     n:"Lait",     c:"#eae6dc", k:.9, def:200, max:500,  p:[[100,"Petit"],[200,"Verre"],[250,"Bol"],[330,"Grand"]] },
+  { id:"jus",      n:"Jus",      c:"#f5a623", k:.9, def:200, max:500,  p:[[125,"Petit"],[200,"Verre"],[250,"Brique"],[330,"Bouteille"]] },
+  { id:"soda",     n:"Soda",     c:"#e85d4f", k:.9, def:330, max:750,  p:[[150,"Mini"],[250,"Petite"],[330,"Canette"],[500,"Bouteille"]] },
+  { id:"soupe",    n:"Soupe",    c:"#e8c547", k:.9, def:250, max:600,  p:[[150,"Tasse"],[250,"Bol"],[350,"Grand bol"]] }
 ];
 const D = Object.fromEntries(DRINKS.map(d => [d.id, d]));
 
@@ -503,8 +511,8 @@ $("b-undo").addEventListener("click", undoLast);
 
 /* ---------- Feuille quantité ---------- */
 let curType = "eau";
-function cupSVG(c, ml){
-  const lvl = Math.min(1, ml / 750);
+function cupSVG(c, ml, max){
+  const lvl = Math.min(1, ml / max);
   const top = 200 - lvl * 160;
   return '<defs><clipPath id="cc"><path d="M22 34h126l-14 162a8 8 0 0 1-8 7H44a8 8 0 0 1-8-7z"/></clipPath></defs>' +
     '<path d="M22 34h126l-14 162a8 8 0 0 1-8 7H44a8 8 0 0 1-8-7z" fill="#1e2d4a"/>' +
@@ -515,18 +523,20 @@ function cupSVG(c, ml){
 }
 function updAdd(){
   const d = D[curType], ml = +$("add-range").value;
-  $("cup").innerHTML = cupSVG(d.c, ml);
+  $("cup").innerHTML = cupSVG(d.c, ml, d.max);
   $("add-ml").textContent = ml + " ml";
   $("add-eff").textContent = d.k < 1 ? "compte pour " + Math.round(ml * d.k) + " ml d'hydratation (" + Math.round(d.k * 100) + " %)" : "hydratation 100 %";
   document.querySelectorAll("#presets button").forEach(b => b.classList.toggle("on", +b.dataset.v === ml));
 }
 function openAdd(type){
   curType = type; const d = D[type];
-  $("add-range").value = S.last[type] || d.def;
+  const r = $("add-range"); r.min = 20; r.max = d.max; r.step = d.max <= 400 ? 5 : 10;
+  r.value = S.last[type] || d.def;
   $("add-go").textContent = "＋ " + d.n.toUpperCase();
   const p = $("presets"); p.textContent = "";
-  for (const v of [150, 250, 330, 500, 750]) {
-    const b = document.createElement("button"); b.dataset.v = v; b.textContent = v;
+  for (const [v, name] of d.p) {
+    const b = document.createElement("button"); b.dataset.v = v;
+    b.innerHTML = "<b></b><small></small>"; b.firstChild.textContent = v; b.lastChild.textContent = name;
     b.addEventListener("click", () => { $("add-range").value = v; updAdd(); });
     p.append(b);
   }
