@@ -72,6 +72,10 @@ section{margin-top:22px}
 .drink:active{transform:scale(.95);background:var(--card-hi)}
 .drink svg{width:34px;height:40px}
 .drink span{font-size:12px;font-weight:600}
+.drink.add{border-style:dashed;background:transparent;color:var(--amber)}
+.drink.add .plus{width:34px;height:40px;display:grid;place-items:center;font-size:28px;font-weight:300;line-height:1}
+.drink.add small{color:var(--faint)}
+.manage{color:var(--amber);font-size:13px;font-weight:700;padding:4px 0}
 .drink small{font-size:10px;color:var(--faint);font-family:var(--mono);margin-top:-4px}
 .quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .btn{height:50px;border-radius:14px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px}
@@ -251,7 +255,7 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
 
   <!-- Boissons -->
   <section>
-    <div class="sec-h"><span class="lbl">Ajouter une boisson</span><span class="lbl" style="color:var(--faint)">au choix</span></div>
+    <div class="sec-h"><span class="lbl">Ajouter une boisson</span><button class="manage" id="b-manage">Gérer ›</button></div>
     <div class="drinks" id="drinks"></div>
     <div class="quick">
       <button class="btn btn-amber" id="b-quick">＋ <span id="quick-txt">Verre d'eau 250 ml</span></button>
@@ -391,8 +395,12 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
 "use strict";
 /* ====== Version & journal des modifications ======
    À chaque modification : augmente APP_VERSION (et VERSION dans sw.js), ajoute une entrée en haut de CHANGELOG. */
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.3.1";
 const CHANGELOG = [
+  { v: "1.3.1", d: "01/11/2026", items: [
+    "Tuile « ＋ Autre » sur l'écran principal pour créer une boisson en un geste",
+    "Lien « Gérer › » à côté de « Ajouter une boisson » pour masquer ou modifier tes boissons"
+  ]},
   { v: "1.3.0", d: "01/11/2026", items: [
     "Mes boissons : crée tes propres boissons (nom, forme, couleur, part d'hydratation, quantité habituelle)",
     "Masque les boissons que tu ne bois jamais pour alléger l'écran",
@@ -490,6 +498,11 @@ function renderDrinks(){
     b.addEventListener("click", () => openAdd(d.id));
     g.append(b);
   }
+  const add = document.createElement("button"); add.className = "drink add";
+  add.innerHTML = '<span class="plus">＋</span><span>Autre</span><small>créer</small>';
+  add.setAttribute("aria-label", "Créer une boisson");
+  add.addEventListener("click", () => openDrinkEditor());
+  g.append(add);
   const w = S.last.eau || 250;
   $("quick-txt").textContent = "Eau " + w + " ml";
 }
@@ -698,7 +711,7 @@ $("e-del").addEventListener("click", () => {
 
 /* ---------- Feuilles ---------- */
 function openSheet(id){ $(id).hidden = false; document.body.style.overflow = "hidden"; }
-function closeSheet(id){ $(id).hidden = true; document.body.style.overflow = ""; }
+function closeSheet(id){ $(id).hidden = true; if (!document.querySelector(".backdrop:not([hidden])")) document.body.style.overflow = ""; }
 document.querySelectorAll(".backdrop").forEach(b => b.addEventListener("click", e => { if (e.target === b) closeSheet(b.id); }));
 document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".backdrop:not([hidden])").forEach(b => closeSheet(b.id)); });
 
@@ -752,6 +765,10 @@ function openDrinkEditor(id){
   drPreview(); openSheet("sh-drink");
 }
 $("s-newdrink").addEventListener("click", () => openDrinkEditor());
+$("b-manage").addEventListener("click", () => {
+  $("b-settings").click();
+  requestAnimationFrame(() => $("dlist").parentElement.scrollIntoView({ block: "start" }));
+});
 $("dr-save").addEventListener("click", () => {
   const n = $("dr-name").value.trim();
   if (!n) { toast("Donne un nom à ta boisson"); $("dr-name").focus(); return; }
@@ -760,7 +777,7 @@ $("dr-save").addEventListener("click", () => {
   if (drEdit) { Object.assign(S.custom.find(x => x.id === drEdit), data); S.last[drEdit] = def; }
   else { const id = "perso-" + Date.now().toString(36); S.custom.push(Object.assign({ id }, data)); S.last[id] = def; }
   save(); refreshDrinks(); renderDrinks(); renderDrinkList(); render();
-  $("sh-drink").hidden = true; toast(drEdit ? "Boisson modifiée" : n + " ajoutée");
+  closeSheet("sh-drink"); toast(drEdit ? "Boisson modifiée" : n + " ajoutée");
 });
 $("dr-del").addEventListener("click", () => {
   if (!drEdit || !confirm("Supprimer « " + D[drEdit].n + " » ? Les prises déjà notées restent dans ton historique.")) return;
@@ -769,7 +786,7 @@ $("dr-del").addEventListener("click", () => {
   else S.custom = S.custom.filter(x => x.id !== drEdit);
   S.hidden = S.hidden.filter(x => x !== drEdit);
   save(); refreshDrinks(); renderDrinks(); renderDrinkList(); render();
-  $("sh-drink").hidden = true; toast("Boisson supprimée");
+  closeSheet("sh-drink"); toast("Boisson supprimée");
 });
 
 /* ---------- Réglages ---------- */
