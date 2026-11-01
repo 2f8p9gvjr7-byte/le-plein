@@ -2,7 +2,7 @@
 // Pour publier une nouvelle version : modifie l'appli, puis change VERSION ci-dessous
 // (même numéro que APP_VERSION dans index.html). Les téléphones la récupèrent
 // automatiquement à la prochaine ouverture avec du réseau.
-const VERSION = "1.3.1";
+const VERSION = "1.3.2";
 const CACHE = "leplein-" + VERSION;
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 

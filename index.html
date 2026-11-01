@@ -395,8 +395,11 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
 "use strict";
 /* ====== Version & journal des modifications ======
    À chaque modification : augmente APP_VERSION (et VERSION dans sw.js), ajoute une entrée en haut de CHANGELOG. */
-const APP_VERSION = "1.3.1";
+const APP_VERSION = "1.3.2";
 const CHANGELOG = [
+  { v: "1.3.2", d: "01/11/2026", items: [
+    "Soupe : formats repères Louche 120 ml, Bol 250 ml, Assiette creuse 300 ml, Grand bol 350 ml"
+  ]},
   { v: "1.3.1", d: "01/11/2026", items: [
     "Tuile « ＋ Autre » sur l'écran principal pour créer une boisson en un geste",
     "Lien « Gérer › » à côté de « Ajouter une boisson » pour masquer ou modifier tes boissons"
@@ -440,7 +443,7 @@ const BASE_DRINKS = [
   { id:"lait",     n:"Lait",     c:"#eae6dc", k:.9, def:200, max:500,  p:[[100,"Petit"],[200,"Verre"],[250,"Bol"],[330,"Grand"]] },
   { id:"jus",      n:"Jus",      c:"#f5a623", k:.9, def:200, max:500,  p:[[125,"Petit"],[200,"Verre"],[250,"Brique"],[330,"Bouteille"]] },
   { id:"soda",     n:"Soda",     c:"#e85d4f", k:.9, def:330, max:750,  p:[[150,"Mini"],[250,"Petite"],[330,"Canette"],[500,"Bouteille"]] },
-  { id:"soupe",    n:"Soupe",    c:"#e8c547", k:.9, def:250, max:600,  p:[[150,"Tasse"],[250,"Bol"],[350,"Grand bol"]] }
+  { id:"soupe",    n:"Soupe",    c:"#e8c547", k:.9, def:250, max:600,  p:[[120,"Louche"],[250,"Bol"],[300,"Assiette"],[350,"Grand bol"]] }
 ];
 let DRINKS = [], D = {};
 const COLORS = ["#5dade2","#7fd8a8","#c3a3e6","#9a6646","#eae6dc","#f5a623","#e85d4f","#e8c547","#6fc3df","#f0b97a"];
