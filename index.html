@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Le Plein</title>
+<meta name="theme-color" content="#0d1526">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Le Plein">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+/* Le Plein — rappel hydratation. Palette « avion » : bleu nuit, ambre, vert. Jauge de réservoir façon cockpit. */
+:root{
+  --bg-deep:#0d1526; --bg:#1a2035; --card:#1e2d4a; --card-hi:#26385c;
+  --line:rgba(160,176,200,.16); --ink:#ffffff; --muted:#a0b0c8; --faint:#6f80a0;
+  --amber:#f5a623; --amber-ink:#1a1204; --green:#2ecc71; --red:#e85d4f; --water:#5dade2;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  --mono:"SF Mono",ui-monospace,Menlo,Consolas,"Roboto Mono",monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg-deep);color:var(--ink);font:15px/1.45 var(--sans);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior-y:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+[hidden]{display:none!important}
+.wrap{max-width:560px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* En-tête */
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 0 6px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:30px;height:30px}
+.brand b{font-size:19px;letter-spacing:-.01em}
+.brand small{display:block;color:var(--muted);font-size:12px;font-weight:500;margin-top:-2px}
+.icon-btn{width:40px;height:40px;border-radius:12px;background:var(--card);display:grid;place-items:center;color:var(--muted)}
+.icon-btn svg{width:20px;height:20px}
+.off{font-size:11px;font-weight:700;color:var(--amber);border:1px solid rgba(245,166,35,.4);border-radius:99px;padding:2px 8px;margin-right:8px}
+
+/* Jauge principale */
+.gauge{position:relative;display:grid;grid-template-columns:1fr 150px;gap:16px;align-items:center;background:linear-gradient(180deg,var(--bg) 0%,var(--card) 100%);border:1px solid var(--line);border-radius:22px;padding:20px;margin-top:8px}
+.readout .big{font:700 46px/1 var(--mono);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.readout .big span{font-size:20px;color:var(--muted);font-weight:600;margin-left:2px}
+.readout .sub{color:var(--muted);margin-top:6px}
+.readout .sub b{color:var(--ink)}
+.bar{height:6px;background:rgba(160,176,200,.15);border-radius:6px;margin:14px 0 12px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--amber);border-radius:6px;transition:width .6s cubic-bezier(.2,.8,.2,1),background .3s}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);background:rgba(13,21,38,.55);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+.chip b{color:var(--ink);font-family:var(--mono);font-weight:600}
+.chip.ok{color:var(--green);border-color:rgba(46,204,113,.35)}
+.tank{width:150px;height:220px;justify-self:center}
+.tank .liquid{transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.tank .wave{animation:wave 3.2s linear infinite}
+.tank .wave2{animation:wave 4.6s linear infinite reverse;opacity:.5}
+@keyframes wave{from{transform:translateX(0)}to{transform:translateX(-120px)}}
+@media (prefers-reduced-motion:reduce){.tank .wave,.tank .wave2{animation:none}}
+.done-banner{margin-top:12px;background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.35);color:var(--green);border-radius:14px;padding:10px 14px;font-weight:600;font-size:14px}
+
+/* Boissons */
+section{margin-top:22px}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.drinks{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.drink{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform .12s,background .2s}
+.drink:active{transform:scale(.95);background:var(--card-hi)}
+.drink svg{width:34px;height:40px}
+.drink span{font-size:12px;font-weight:600}
+.drink small{font-size:10px;color:var(--faint);font-family:var(--mono);margin-top:-4px}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.btn{height:50px;border-radius:14px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-amber{background:var(--amber);color:var(--amber-ink)}
+.btn-ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn-danger{background:rgba(232,93,79,.12);color:var(--red);border:1px solid rgba(232,93,79,.35)}
+.btn:disabled{opacity:.45}
+
+/* Journal du jour */
+.log{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.dot{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}
+.dot svg{width:18px;height:20px}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;font-size:14px}
+.row .t small{color:var(--faint);font-size:12px}
+.row .v{font-family:var(--mono);font-weight:600}
+.row .del{width:32px;height:32px;border-radius:9px;color:var(--faint);display:grid;place-items:center}
+.row .del svg{width:16px;height:16px}
+.empty{padding:22px 16px;text-align:center;color:var(--muted);font-size:14px}
+
+/* Historique */
+.hist{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 14px 12px}
+.bars{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:8px;height:120px;align-items:end}
+.bars .goal-line{position:absolute;left:0;right:0;border-top:1px dashed rgba(245,166,35,.6);pointer-events:none}
+.bars .goal-line span{position:absolute;right:0;top:-16px;font:600 10px var(--mono);color:var(--amber)}
+.bars .b{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.bars .b i{width:100%;max-width:28px;border-radius:6px 6px 3px 3px;background:var(--water);min-height:3px;transition:height .6s}
+.bars .b.ok i{background:var(--green)}
+.bars .b.today i{outline:2px solid rgba(255,255,255,.25);outline-offset:1px}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:6px;text-align:center;font-size:11px;color:var(--faint)}
+.days .today{color:var(--ink);font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{background:rgba(13,21,38,.5);border-radius:12px;padding:9px 10px}
+.stat b{display:block;font:700 18px var(--mono)}
+.stat small{color:var(--muted);font-size:11px}
+
+/* Journal des modifications */
+footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);color:var(--faint);font-size:12px}
+footer details{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+footer summary{cursor:pointer;color:var(--muted);font-weight:600;list-style:none;display:flex;justify-content:space-between}
+footer summary::-webkit-details-marker{display:none}
+footer summary::after{content:"＋";color:var(--amber)}
+footer details[open] summary::after{content:"－"}
+.cl{margin-top:10px}
+.cl h4{margin:10px 0 4px;color:var(--ink);font-size:13px}
+.cl h4 span{color:var(--amber);font-family:var(--mono);margin-right:6px}
+.cl ul{margin:0;padding-left:18px}
+.cl li{margin:2px 0}
+.ver{text-align:center;margin-top:12px}
+
+/* Feuilles (bottom sheets) */
+.backdrop{position:fixed;inset:0;background:rgba(5,9,18,.66);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:560px;max-height:92vh;overflow:auto;background:var(--bg);border-radius:24px 24px 0 0;border:1px solid var(--line);border-bottom:0;padding:10px 20px calc(20px + env(safe-area-inset-bottom,0px));animation:up .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@keyframes down{from{transform:translate(-50%,-20px);opacity:0}}
+.grab{width:40px;height:5px;border-radius:5px;background:var(--line);margin:0 auto 12px}
+.sheet h2{margin:0 0 4px;font-size:20px}
+.sheet .hint{color:var(--muted);font-size:13px;margin:0 0 14px}
+.cup-wrap{display:flex;justify-content:center;margin:6px 0 4px}
+.cup-wrap svg{width:170px;height:210px}
+.cup-ml{text-align:center;font:700 40px var(--mono);letter-spacing:-.02em}
+.cup-eff{text-align:center;color:var(--muted);font-size:13px;margin-bottom:12px}
+input[type=range]{width:100%;accent-color:var(--amber);height:28px}
+.presets{display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap}
+.presets button{flex:1;min-width:60px;height:38px;border-radius:11px;background:var(--card);border:1px solid var(--line);font:600 13px var(--mono)}
+.presets button.on{border-color:var(--amber);color:var(--amber)}
+.field{margin-bottom:14px}
+.field label{display:block;margin-bottom:6px}
+.field input,.field select{width:100%;height:46px;border-radius:12px;background:var(--card);border:1px solid var(--line);padding:0 12px;font-family:var(--mono)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.note{font-size:12.5px;color:var(--muted);background:rgba(13,21,38,.55);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:14px}
+.note b{color:var(--ink)}
+.group{border-top:1px solid var(--line);padding-top:16px;margin-top:6px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.switch input{appearance:none;-webkit-appearance:none;width:50px;height:30px;border-radius:30px;background:var(--card-hi);position:relative;transition:background .2s;flex:none}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch input:checked{background:var(--green)}
+.switch input:checked::after{transform:translateX(20px)}
+.stack{display:grid;gap:10px}
+
+/* Toast */
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:40;background:var(--card-hi);border:1px solid var(--line);border-radius:14px;padding:10px 12px 10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:calc(100% - 32px);white-space:nowrap;animation:down .25s}
+.toast button{color:var(--amber);font-weight:700;padding:6px 8px}
+.reminder{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:16px;right:16px;max-width:528px;margin:0 auto;z-index:41;background:var(--amber);color:var(--amber-ink);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.4);animation:up .3s}
+.reminder button{background:var(--amber-ink);color:var(--amber);border-radius:10px;padding:8px 12px;font-weight:700}
+.reminder .x{background:none;color:var(--amber-ink);padding:4px}
+@media (max-width:370px){.gauge{grid-template-columns:1fr 120px;padding:16px}.tank{width:120px;height:180px}.readout .big{font-size:38px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3c4.5 6 9 10.6 9 16a9 9 0 0 1-18 0c0-5.4 4.5-10 9-16z" fill="#5dade2"/><path d="M9.5 20.5h13" stroke="#f5a623" stroke-width="2" stroke-linecap="round"/><path d="M11 24.5h10" stroke="#0d1526" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></svg>
+      <div><b>Le Plein</b><small id="today-label">Aujourd'hui</small></div>
+    </div>
+    <div style="display:flex;align-items:center">
+      <span class="off" id="offline" hidden>hors ligne</span>
+      <button class="icon-btn" id="b-settings" aria-label="Réglages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Jauge -->
+  <div class="gauge">
+    <div class="readout">
+      <div class="lbl">Niveau du jour</div>
+      <div class="big" id="total">0<span>ml</span></div>
+      <div class="sub">sur <b id="goal-txt">2 000 ml</b> · <b id="pct">0 %</b></div>
+      <div class="bar"><i id="bar"></i></div>
+      <div class="chips">
+        <span class="chip" id="chip-left">Reste <b id="left">2 000</b></span>
+        <span class="chip" id="chip-next">⏱ <b id="next">—</b></span>
+        <span class="chip" id="chip-streak" hidden>🔥 <b id="streak">0</b> j</span>
+      </div>
+    </div>
+    <svg class="tank" viewBox="0 0 120 176" aria-hidden="true">
+      <defs>
+        <clipPath id="tank-clip"><path d="M44 4h32v12c0 4 3 6 8 9 12 7 20 15 20 32v104a11 11 0 0 1-11 11H27a11 11 0 0 1-11-11V57c0-17 8-25 20-32 5-3 8-5 8-9z"/></clipPath>
+      </defs>
+      <path d="M44 4h32v12c0 4 3 6 8 9 12 7 20 15 20 32v104a11 11 0 0 1-11 11H27a11 11 0 0 1-11-11V57c0-17 8-25 20-32 5-3 8-5 8-9z" fill="#0d1526"/>
+      <g clip-path="url(#tank-clip)">
+        <g class="liquid" id="liquid" style="transform:translateY(176px)">
+          <path class="wave2" id="wave2" d="M0 6 Q15 0 30 6 T60 6 T90 6 T120 6 T150 6 T180 6 T210 6 T240 6 V200 H0z" fill="#5dade2"/>
+          <path class="wave" id="wave" d="M0 8 Q15 2 30 8 T60 8 T90 8 T120 8 T150 8 T180 8 T210 8 T240 8 V200 H0z" fill="#5dade2"/>
+        </g>
+        <!-- graduations façon jauge carburant -->
+        <g stroke="rgba(255,255,255,.35)" stroke-width="1.5">
+          <path d="M16 56h10M16 82h6M16 108h10M16 134h6M16 160h6"/>
+        </g>
+        <g fill="rgba(255,255,255,.55)" font-family="SF Mono,Menlo,monospace" font-size="8" font-weight="700">
+          <text x="29" y="59">F</text><text x="29" y="111">½</text>
+        </g>
+      </g>
+      <path d="M44 4h32v12c0 4 3 6 8 9 12 7 20 15 20 32v104a11 11 0 0 1-11 11H27a11 11 0 0 1-11-11V57c0-17 8-25 20-32 5-3 8-5 8-9z" fill="none" stroke="rgba(160,176,200,.35)" stroke-width="2"/>
+      <rect x="40" y="0" width="40" height="7" rx="3" fill="#f5a623"/>
+      <path d="M86 40c5 4 8 9 8 18v60" stroke="rgba(255,255,255,.18)" stroke-width="4" stroke-linecap="round" fill="none"/>
+    </svg>
+  </div>
+  <div class="done-banner" id="done" hidden>✅ Objectif atteint, plein fait ! Continue tranquillement.</div>
+
+  <!-- Boissons -->
+  <section>
+    <div class="sec-h"><span class="lbl">Ajouter une boisson</span><span class="lbl" style="color:var(--faint)">au choix</span></div>
+    <div class="drinks" id="drinks"></div>
+    <div class="quick">
+      <button class="btn btn-amber" id="b-quick">＋ <span id="quick-txt">Verre d'eau 250 ml</span></button>
+      <button class="btn btn-ghost" id="b-undo" disabled>↶ Annuler le dernier</button>
+    </div>
+  </section>
+
+  <!-- Journal du jour -->
+  <section>
+    <div class="sec-h"><span class="lbl">Journal du jour</span><span class="lbl mono" id="count">0 prise</span></div>
+    <div class="log" id="log"></div>
+  </section>
+
+  <!-- Historique -->
+  <section>
+    <div class="sec-h"><span class="lbl">7 derniers jours</span><span class="lbl" id="hist-avg"></span></div>
+    <div class="hist">
+      <div class="bars" id="bars"></div>
+      <div class="days" id="days"></div>
+      <div class="stats">
+        <div class="stat"><b id="s-avg">—</b><small>moyenne / jour</small></div>
+        <div class="stat"><b id="s-ok">—</b><small>objectifs atteints</small></div>
+        <div class="stat"><b id="s-best">—</b><small>meilleure série</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Journal des modifications -->
+  <footer>
+    <details>
+      <summary>Journal des modifications</summary>
+      <div class="cl" id="changelog"></div>
+    </details>
+    <div class="ver">Le Plein · version <span class="mono" id="ver"></span> · tes données restent sur ce téléphone</div>
+  </footer>
+</div>
+
+<!-- Feuille : quantité -->
+<div class="backdrop" id="sh-add" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="add-title">
+    <div class="grab"></div>
+    <div class="cup-wrap"><svg viewBox="0 0 170 210" id="cup"></svg></div>
+    <div class="cup-ml" id="add-ml">250 ml</div>
+    <div class="cup-eff" id="add-eff"></div>
+    <input type="range" id="add-range" min="50" max="1000" step="10" value="250" aria-label="Quantité en millilitres">
+    <div class="presets" id="presets"></div>
+    <button class="btn btn-amber" style="width:100%;height:56px;font-size:17px" id="add-go">＋ EAU</button>
+    <h2 id="add-title" hidden>Ajouter</h2>
+  </div>
+</div>
+
+<!-- Feuille : réglages -->
+<div class="backdrop" id="sh-set" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="set-title">
+    <div class="grab"></div>
+    <h2 id="set-title">Réglages</h2>
+    <p class="hint">Tout est enregistré sur ton téléphone, même hors connexion.</p>
+
+    <div class="field">
+      <label class="lbl" for="s-goal">Objectif quotidien (ml)</label>
+      <input id="s-goal" type="number" inputmode="numeric" min="500" max="6000" step="50">
+    </div>
+    <div class="field-row">
+      <div class="field"><label class="lbl" for="s-weight">Ton poids (kg)</label><input id="s-weight" type="number" inputmode="decimal" placeholder="ex. 75"></div>
+      <div class="field"><label class="lbl" for="s-act">Activité</label>
+        <select id="s-act"><option value="0">Calme</option><option value="400">Modérée</option><option value="800">Sportive</option></select></div>
+    </div>
+    <button class="btn btn-ghost" style="width:100%;margin-bottom:6px" id="s-calc">Calculer un objectif conseillé</button>
+    <p class="hint" style="margin:6px 0 14px">Repère courant : environ 33 ml par kg, plus un supplément si tu fais du sport ou qu'il fait chaud.</p>
+
+    <div class="group">
+      <div class="lbl" style="margin-bottom:10px">Rappels</div>
+      <div class="field-row">
+        <div class="field"><label class="lbl" for="s-from">De</label><input id="s-from" type="time"></div>
+        <div class="field"><label class="lbl" for="s-to">À</label><input id="s-to" type="time"></div>
+      </div>
+      <div class="field"><label class="lbl" for="s-every">Toutes les</label>
+        <select id="s-every"><option value="45">45 min</option><option value="60">1 h</option><option value="90">1 h 30</option><option value="120">2 h</option><option value="180">3 h</option></select></div>
+      <label class="switch"><span>Rappel dans l'appli (bandeau + notification quand elle est ouverte)</span><input type="checkbox" id="s-notif"></label>
+      <div class="note"><b>Rappels appli fermée :</b> sur iPhone, une appli web ne peut pas sonner toute seule une fois fermée. Le bouton ci-dessous crée des alarmes récurrentes dans ton Calendrier, aux heures choisies. Elles marchent même sans réseau.</div>
+      <button class="btn btn-amber" style="width:100%" id="s-ics">📅 Ajouter les rappels au Calendrier</button>
+    </div>
+
+    <div class="group" style="margin-top:16px">
+      <div class="lbl" style="margin-bottom:10px">Sauvegarde</div>
+      <div class="stack">
+        <button class="btn btn-ghost" id="s-export">Exporter mes données</button>
+        <button class="btn btn-ghost" id="s-import">Importer une sauvegarde</button>
+        <input type="file" id="s-file" accept="application/json,.json" hidden>
+        <button class="btn btn-danger" id="s-reset">Effacer l'historique</button>
+      </div>
+    </div>
+    <button class="btn btn-amber" style="width:100%;margin-top:18px" id="s-save">Enregistrer</button>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* ====== Version & journal des modifications ======
+   À chaque modification : augmente APP_VERSION (et VERSION dans sw.js), ajoute une entrée en haut de CHANGELOG. */
+const APP_VERSION = "1.0.0";
+const CHANGELOG = [
+  { v: "1.0.0", d: "01/11/2026", items: [
+    "Première version de Le Plein",
+    "Jauge de réservoir animée et objectif du jour",
+    "8 boissons avec leur part d'hydratation (eau, thé, infusion, café, lait, jus, soda, soupe)",
+    "Choix de la quantité au curseur ou en un geste",
+    "Rappels dans l'appli et alarmes récurrentes dans le Calendrier",
+    "Historique 7 jours, série de jours réussis, moyenne",
+    "Calcul d'objectif selon le poids et l'activité",
+    "Fonctionne hors connexion, mise à jour automatique",
+    "Export et import des données"
+  ]}
+];
+
+const $ = id => document.getElementById(id);
+const STORE = "leplein.v1";
+const DRINKS = [
+  { id:"eau",      n:"Eau",      c:"#5dade2", k:1,   def:250 },
+  { id:"the",      n:"Thé",      c:"#7fd8a8", k:.9,  def:250 },
+  { id:"infusion", n:"Infusion", c:"#c3a3e6", k:1,   def:250 },
+  { id:"cafe",     n:"Café",     c:"#9a6646", k:.8,  def:150 },
+  { id:"lait",     n:"Lait",     c:"#eae6dc", k:.9,  def:200 },
+  { id:"jus",      n:"Jus",      c:"#f5a623", k:.9,  def:200 },
+  { id:"soda",     n:"Soda",     c:"#e85d4f", k:.9,  def:330 },
+  { id:"soupe",    n:"Soupe",    c:"#e8c547", k:.9,  def:250 }
+];
+const D = Object.fromEntries(DRINKS.map(d => [d.id, d]));
+
+/* ---------- Données ---------- */
+function load(){
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(STORE)); } catch {}
+  return Object.assign({ goal:2000, weight:"", act:"0", from:"08:00", to:"21:00", every:90, notif:false, last:{}, log:{}, notified:0 }, s || {});
+}
+let S = load();
+function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch {} }
+const dayKey = (d = new Date()) => d.toLocaleDateString("sv-SE");
+const fmt = n => Math.round(n).toLocaleString("fr-FR");
+const today = () => S.log[dayKey()] || [];
+const eff = e => Math.round(e.ml * (D[e.type] ? D[e.type].k : 1));
+const totalOf = arr => arr.reduce((a, e) => a + eff(e), 0);
+
+/* ---------- Icônes de boissons ---------- */
+function glyph(id, c){
+  const shapes = {
+    eau:      '<path d="M7 5h20l-3 30H10z" fill="none" stroke="'+c+'" stroke-width="2.4" stroke-linejoin="round"/><path d="M9 16h16l-1.9 17H10.9z" fill="'+c+'"/>',
+    the:      '<path d="M5 14h20v10a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8z" fill="'+c+'"/><path d="M25 17h2a4 4 0 0 1 0 8h-2" fill="none" stroke="'+c+'" stroke-width="2.4"/><path d="M15 4v7m0 0-3 3h6z" stroke="'+c+'" stroke-width="1.8" fill="'+c+'"/>',
+    infusion: '<path d="M5 14h20v10a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8z" fill="'+c+'"/><path d="M25 17h2a4 4 0 0 1 0 8h-2" fill="none" stroke="'+c+'" stroke-width="2.4"/><path d="M11 10c0-3 3-3 3-6M17 10c0-3 3-3 3-6" stroke="'+c+'" stroke-width="2" fill="none" stroke-linecap="round"/>',
+    cafe:     '<path d="M6 10h22l-1 4H7z" fill="#eae6dc"/><path d="M5 7a3 3 0 0 1 3-3h18a3 3 0 0 1 3 3v3H5z" fill="#eae6dc"/><path d="M8 14h18l-2.6 22H10.6z" fill="'+c+'"/>',
+    lait:     '<path d="M11 3h12v6l4 6v20H7V15l4-6z" fill="'+c+'"/><path d="M7 20h20v8H7z" fill="#5dade2"/>',
+    jus:      '<path d="M7 9h20l-3 27H10z" fill="'+c+'"/><path d="M20 12 25 2" stroke="#e85d4f" stroke-width="2.4" stroke-linecap="round"/><circle cx="25" cy="10" r="4" fill="#f0b97a"/>',
+    soda:     '<rect x="8" y="5" width="18" height="31" rx="4" fill="'+c+'"/><rect x="10" y="3" width="14" height="4" rx="1.5" fill="#a0b0c8"/><path d="M8 17h18v7H8z" fill="#fff" opacity=".85"/>',
+    soupe:    '<path d="M3 18h28a14 14 0 0 1-28 0z" fill="'+c+'"/><path d="M10 12c0-3 3-3 3-6M18 12c0-3 3-3 3-6" stroke="'+c+'" stroke-width="2" fill="none" stroke-linecap="round"/>'
+  };
+  return '<svg viewBox="0 0 34 40" aria-hidden="true">' + (shapes[id] || shapes.eau) + '</svg>';
+}
+
+/* ---------- Rendu ---------- */
+function renderDrinks(){
+  const g = $("drinks"); g.textContent = "";
+  for (const d of DRINKS) {
+    const b = document.createElement("button"); b.className = "drink";
+    b.innerHTML = glyph(d.id, d.c) + "<span></span><small></small>";
+    b.children[1].textContent = d.n;
+    b.children[2].textContent = (S.last[d.id] || d.def) + " ml";
+    b.addEventListener("click", () => openAdd(d.id));
+    g.append(b);
+  }
+  const w = S.last.eau || 250;
+  $("quick-txt").textContent = "Eau " + w + " ml";
+}
+
+let prevPct = -1;
+function render(){
+  const arr = today(), tot = totalOf(arr), goal = S.goal;
+  const pct = Math.min(999, Math.round(tot / goal * 100));
+  $("today-label").textContent = new Date().toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" });
+  $("total").innerHTML = fmt(tot) + "<span>ml</span>";
+  $("goal-txt").textContent = fmt(goal) + " ml";
+  $("pct").textContent = pct + " %";
+  const bar = $("bar"); bar.style.width = Math.min(100, pct) + "%"; bar.style.background = pct >= 100 ? "var(--green)" : "var(--amber)";
+  const left = Math.max(0, goal - tot);
+  $("left").textContent = left ? fmt(left) + " ml" : "0";
+  $("chip-left").classList.toggle("ok", !left);
+  $("done").hidden = pct < 100;
+
+  // Niveau du réservoir : zone utile de y=176 (vide) à y=48 (plein, repère F)
+  const lvl = Math.min(1, tot / goal);
+  const y = 176 - lvl * 128 - (lvl > 0 ? 4 : 0);
+  $("liquid").style.transform = "translateY(" + y + "px)";
+  const col = pct >= 100 ? "#2ecc71" : "#5dade2";
+  $("wave").setAttribute("fill", col); $("wave2").setAttribute("fill", col);
+  if (prevPct >= 0 && prevPct < 100 && pct >= 100) celebrate();
+  prevPct = pct;
+
+  // Série
+  const st = streak();
+  $("chip-streak").hidden = st < 2; $("streak").textContent = st;
+  $("next").textContent = nextLabel();
+
+  // Journal
+  const log = $("log"); log.textContent = "";
+  $("count").textContent = arr.length + (arr.length > 1 ? " prises" : " prise");
+  $("b-undo").disabled = !arr.length;
+  if (!arr.length) { log.innerHTML = '<div class="empty">Rien bu pour l\'instant aujourd\'hui.<br>Touche une boisson pour faire le plein.</div>'; }
+  [...arr].reverse().forEach(e => {
+    const d = D[e.type] || D.eau;
+    const r = document.createElement("div"); r.className = "row";
+    r.innerHTML = '<div class="dot" style="background:' + d.c + '22">' + glyph(d.id, d.c) + '</div><div class="t"><b></b><small></small></div><div class="v"></div><button class="del" aria-label="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>';
+    r.querySelector("b").textContent = d.n;
+    r.querySelector("small").textContent = new Date(e.ts).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" }) + (d.k < 1 ? " · compte " + eff(e) + " ml" : "");
+    r.querySelector(".v").textContent = e.ml + " ml";
+    r.querySelector(".del").addEventListener("click", () => removeEntry(e.ts));
+    log.append(r);
+  });
+  renderHistory();
+}
+
+function renderHistory(){
+  const bars = $("bars"), days = $("days"); bars.textContent = ""; days.textContent = "";
+  const vals = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    vals.push({ d, v: totalOf(S.log[dayKey(d)] || []), today: i === 0 });
+  }
+  const max = Math.max(S.goal * 1.2, ...vals.map(x => x.v));
+  const gl = document.createElement("div"); gl.className = "goal-line";
+  gl.style.bottom = (S.goal / max * 100) + "%"; gl.innerHTML = "<span></span>"; gl.firstChild.textContent = fmt(S.goal);
+  bars.append(gl);
+  for (const x of vals) {
+    const b = document.createElement("div"); b.className = "b" + (x.v >= S.goal ? " ok" : "") + (x.today ? " today" : "");
+    const i = document.createElement("i"); i.style.height = (x.v / max * 100) + "%"; i.title = fmt(x.v) + " ml";
+    b.append(i); bars.append(b);
+    const l = document.createElement("div"); if (x.today) l.className = "today";
+    l.textContent = x.today ? "auj." : x.d.toLocaleDateString("fr-FR", { weekday:"short" }).replace(".", "");
+    days.append(l);
+  }
+  const past = vals.filter(x => x.v > 0);
+  $("s-avg").textContent = past.length ? fmt(past.reduce((a, x) => a + x.v, 0) / past.length) : "—";
+  $("s-ok").textContent = vals.filter(x => x.v >= S.goal).length + "/7";
+  $("s-best").textContent = bestStreak() + " j";
+}
+
+function streak(){
+  let n = 0; const d = new Date();
+  if (totalOf(S.log[dayKey(d)] || []) < S.goal) d.setDate(d.getDate() - 1);
+  while (totalOf(S.log[dayKey(d)] || []) >= S.goal) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function bestStreak(){
+  const keys = Object.keys(S.log).filter(k => totalOf(S.log[k]) >= S.goal).sort();
+  let best = 0, cur = 0, prev = null;
+  for (const k of keys) {
+    const t = new Date(k + "T12:00:00");
+    cur = prev && (t - prev) / 864e5 < 1.5 ? cur + 1 : 1;
+    best = Math.max(best, cur); prev = t;
+  }
+  return best;
+}
+
+/* ---------- Ajout / suppression ---------- */
+function addEntry(type, ml){
+  const k = dayKey();
+  (S.log[k] = S.log[k] || []).push({ type, ml, ts: Date.now() });
+  S.last[type] = ml; S.notified = 0;
+  save(); renderDrinks(); render(); closeReminder();
+  if (navigator.vibrate) navigator.vibrate(15);
+  toast(D[type].n + " +" + ml + " ml", "Annuler", undoLast);
+}
+function undoLast(){
+  const a = today(); if (!a.length) return;
+  a.pop(); save(); render();
+}
+function removeEntry(ts){
+  const k = dayKey(); S.log[k] = today().filter(e => e.ts !== ts); save(); render();
+}
+$("b-quick").addEventListener("click", () => addEntry("eau", S.last.eau || 250));
+$("b-undo").addEventListener("click", undoLast);
+
+/* ---------- Feuille quantité ---------- */
+let curType = "eau";
+function cupSVG(c, ml){
+  const lvl = Math.min(1, ml / 750);
+  const top = 200 - lvl * 160;
+  return '<defs><clipPath id="cc"><path d="M22 34h126l-14 162a8 8 0 0 1-8 7H44a8 8 0 0 1-8-7z"/></clipPath></defs>' +
+    '<path d="M22 34h126l-14 162a8 8 0 0 1-8 7H44a8 8 0 0 1-8-7z" fill="#1e2d4a"/>' +
+    '<g clip-path="url(#cc)"><rect x="0" y="' + top + '" width="170" height="220" fill="' + c + '" style="transition:y .25s"/>' +
+    '<path d="M0 ' + top + ' Q20 ' + (top - 6) + ' 42 ' + top + ' T85 ' + top + ' T128 ' + top + ' T170 ' + top + ' V' + (top + 8) + ' H0z" fill="' + c + '"/></g>' +
+    '<path d="M14 22a8 8 0 0 1 8-8h126a8 8 0 0 1 8 8v12H14z" fill="#eae6dc"/>' +
+    '<path d="M22 34h126l-14 162a8 8 0 0 1-8 7H44a8 8 0 0 1-8-7z" fill="none" stroke="rgba(160,176,200,.35)" stroke-width="2"/>';
+}
+function updAdd(){
+  const d = D[curType], ml = +$("add-range").value;
+  $("cup").innerHTML = cupSVG(d.c, ml);
+  $("add-ml").textContent = ml + " ml";
+  $("add-eff").textContent = d.k < 1 ? "compte pour " + Math.round(ml * d.k) + " ml d'hydratation (" + Math.round(d.k * 100) + " %)" : "hydratation 100 %";
+  document.querySelectorAll("#presets button").forEach(b => b.classList.toggle("on", +b.dataset.v === ml));
+}
+function openAdd(type){
+  curType = type; const d = D[type];
+  $("add-range").value = S.last[type] || d.def;
+  $("add-go").textContent = "＋ " + d.n.toUpperCase();
+  const p = $("presets"); p.textContent = "";
+  for (const v of [150, 250, 330, 500, 750]) {
+    const b = document.createElement("button"); b.dataset.v = v; b.textContent = v;
+    b.addEventListener("click", () => { $("add-range").value = v; updAdd(); });
+    p.append(b);
+  }
+  updAdd(); openSheet("sh-add");
+}
+$("add-range").addEventListener("input", updAdd);
+$("add-go").addEventListener("click", () => { addEntry(curType, +$("add-range").value); closeSheet("sh-add"); });
+
+/* ---------- Feuilles ---------- */
+function openSheet(id){ $(id).hidden = false; document.body.style.overflow = "hidden"; }
+function closeSheet(id){ $(id).hidden = true; document.body.style.overflow = ""; }
+document.querySelectorAll(".backdrop").forEach(b => b.addEventListener("click", e => { if (e.target === b) closeSheet(b.id); }));
+document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".backdrop:not([hidden])").forEach(b => closeSheet(b.id)); });
+
+/* ---------- Réglages ---------- */
+$("b-settings").addEventListener("click", () => {
+  $("s-goal").value = S.goal; $("s-weight").value = S.weight; $("s-act").value = S.act;
+  $("s-from").value = S.from; $("s-to").value = S.to; $("s-every").value = S.every; $("s-notif").checked = S.notif;
+  openSheet("sh-set");
+});
+$("s-calc").addEventListener("click", () => {
+  const w = parseFloat(String($("s-weight").value).replace(",", "."));
+  if (!(w > 25 && w < 250)) { toast("Indique ton poids en kg"); $("s-weight").focus(); return; }
+  const g = Math.round((w * 33 + +$("s-act").value) / 50) * 50;
+  $("s-goal").value = g; toast("Objectif conseillé : " + fmt(g) + " ml");
+});
+$("s-notif").addEventListener("change", async e => {
+  if (e.target.checked && "Notification" in window && Notification.permission === "default") {
+    try { await Notification.requestPermission(); } catch {}
+  }
+});
+$("s-save").addEventListener("click", () => {
+  const g = parseInt($("s-goal").value, 10);
+  if (g >= 500 && g <= 6000) S.goal = g;
+  S.weight = $("s-weight").value; S.act = $("s-act").value;
+  S.from = $("s-from").value || "08:00"; S.to = $("s-to").value || "21:00";
+  if (S.to <= S.from) { toast("L'heure de fin doit suivre l'heure de début"); return; }
+  S.every = +$("s-every").value; S.notif = $("s-notif").checked; S.notified = 0;
+  save(); closeSheet("sh-set"); render(); toast("Réglages enregistrés");
+});
+
+/* Calendrier (.ics) — alarmes quotidiennes récurrentes */
+function slots(){
+  const [fh, fm] = S.from.split(":").map(Number), [th, tm] = S.to.split(":").map(Number);
+  const out = []; for (let m = fh * 60 + fm; m <= th * 60 + tm; m += S.every) out.push(m);
+  return out;
+}
+$("s-ics").addEventListener("click", async () => {
+  // Enregistre d'abord les horaires affichés
+  S.from = $("s-from").value || S.from; S.to = $("s-to").value || S.to; S.every = +$("s-every").value; save();
+  const p = n => String(n).padStart(2, "0");
+  const d = new Date(), ds = d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate());
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+  let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Le Plein//FR\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:Le Plein\r\n";
+  slots().forEach((m, i) => {
+    const h = p(Math.floor(m / 60)), mi = p(m % 60), e = m + 5;
+    ics += "BEGIN:VEVENT\r\nUID:leplein-" + ds + "-" + i + "@leplein\r\nDTSTAMP:" + stamp +
+      "\r\nDTSTART:" + ds + "T" + h + mi + "00\r\nDTEND:" + ds + "T" + p(Math.floor(e / 60)) + p(e % 60) + "00" +
+      "\r\nRRULE:FREQ=DAILY\r\nSUMMARY:💧 Le Plein — bois un verre d'eau\r\nTRANSP:TRANSPARENT" +
+      "\r\nBEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:Bois un verre d'eau\r\nTRIGGER:PT0M\r\nEND:VALARM\r\nEND:VEVENT\r\n";
+  });
+  ics += "END:VCALENDAR\r\n";
+  // Safari ouvre un lien text/calendar directement dans l'écran « Ajouter au Calendrier »
+  const a = document.createElement("a");
+  a.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+  a.target = "_blank"; a.rel = "noopener";
+  document.body.append(a); a.click(); setTimeout(() => a.remove(), 1000);
+  toast(slots().length + " rappels par jour, à ajouter au Calendrier");
+});
+
+/* Sauvegarde */
+$("s-export").addEventListener("click", async () => {
+  const file = new File([JSON.stringify(S, null, 1)], "le-plein-" + dayKey() + ".json", { type: "application/json" });
+  try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
+});
+$("s-import").addEventListener("click", () => $("s-file").click());
+$("s-file").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!d || typeof d.log !== "object") throw 0;
+    S = Object.assign(load(), d); save(); closeSheet("sh-set"); renderDrinks(); render(); toast("Sauvegarde importée");
+  } catch { toast("Fichier non reconnu"); }
+  e.target.value = "";
+});
+$("s-reset").addEventListener("click", () => {
+  if (!confirm("Effacer tout l'historique de boissons ? Tes réglages sont conservés.")) return;
+  S.log = {}; save(); closeSheet("sh-set"); render(); toast("Historique effacé");
+});
+
+/* ---------- Rappels dans l'appli ---------- */
+function toMin(t){ const [h, m] = t.split(":").map(Number); return h * 60 + m; }
+function nextReminder(){
+  const now = new Date(), nowM = now.getHours() * 60 + now.getMinutes();
+  const a = today(), last = a.length ? a[a.length - 1].ts : 0;
+  const from = toMin(S.from), to = toMin(S.to);
+  let t;
+  if (last) { const l = new Date(last); t = l.getHours() * 60 + l.getMinutes() + S.every; }
+  else t = from;
+  if (t < from) t = from;
+  if (!last && nowM > from) { // pas encore bu : prochain créneau régulier à partir de maintenant
+    t = from + Math.ceil((nowM - from) / S.every) * S.every;
+  }
+  if (t > to) return null; // demain
+  const d = new Date(); d.setHours(0, t, 0, 0); return d;
+}
+function nextLabel(){
+  if (totalOf(today()) >= S.goal) return "objectif ok";
+  const n = nextReminder();
+  return n ? n.toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" }) : "demain " + S.from;
+}
+function tick(){
+  $("next").textContent = nextLabel();
+  if (dayKey() !== curDay) { curDay = dayKey(); prevPct = -1; render(); }
+  if (!S.notif || totalOf(today()) >= S.goal) return;
+  const n = nextReminder(); if (!n) return;
+  if (Date.now() >= n.getTime() && S.notified !== n.getTime()) {
+    S.notified = n.getTime(); save();
+    showReminder();
+  }
+}
+let curDay = dayKey();
+function showReminder(){
+  closeReminder();
+  const left = Math.max(0, S.goal - totalOf(today()));
+  const r = document.createElement("div"); r.className = "reminder"; r.id = "reminder"; r.setAttribute("role", "alert");
+  r.innerHTML = '<span style="font-size:22px">💧</span><span style="flex:1">C\'est l\'heure d\'un verre ! Il reste <span class="mono"></span> ml.</span><button>＋ 250</button><button class="x" aria-label="Fermer">✕</button>';
+  r.querySelector(".mono").textContent = fmt(left);
+  r.children[2].addEventListener("click", () => addEntry("eau", S.last.eau || 250));
+  r.querySelector(".x").addEventListener("click", closeReminder);
+  document.body.append(r);
+  if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+  if ("Notification" in window && Notification.permission === "granted" && document.visibilityState !== "visible" && navigator.serviceWorker) {
+    navigator.serviceWorker.ready.then(reg => reg.showNotification("Le Plein", { body: "C'est l'heure d'un verre d'eau. Reste " + fmt(left) + " ml.", icon: "icon-192.png", tag: "leplein" })).catch(() => {});
+  }
+}
+function closeReminder(){ const r = $("reminder"); if (r) r.remove(); }
+
+/* ---------- Toasts & célébration ---------- */
+let toastTimer;
+function toast(msg, action, fn){
+  const box = $("toasts"); box.textContent = ""; clearTimeout(toastTimer);
+  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status");
+  const s = document.createElement("span"); s.textContent = msg; t.append(s);
+  if (action) { const b = document.createElement("button"); b.textContent = action; b.addEventListener("click", () => { fn(); box.textContent = ""; }); t.append(b); }
+  box.append(t); toastTimer = setTimeout(() => { box.textContent = ""; }, 3500);
+}
+function celebrate(){
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cols = ["#f5a623", "#2ecc71", "#5dade2", "#ffffff"];
+  for (let i = 0; i < 40; i++) {
+    const c = document.createElement("i");
+    c.style.cssText = "position:fixed;z-index:50;top:-10px;left:" + (Math.random() * 100) + "vw;width:8px;height:12px;border-radius:2px;pointer-events:none;background:" + cols[i % 4] + ";transition:transform 1.8s cubic-bezier(.2,.6,.4,1),opacity 1.8s";
+    document.body.append(c);
+    requestAnimationFrame(() => requestAnimationFrame(() => { c.style.transform = "translate(" + (Math.random() * 120 - 60) + "px," + (innerHeight + 40) + "px) rotate(" + (Math.random() * 720) + "deg)"; c.style.opacity = ".6"; }));
+    setTimeout(() => c.remove(), 2000);
+  }
+}
+
+/* ---------- Journal des modifications ---------- */
+function renderChangelog(){
+  $("ver").textContent = APP_VERSION;
+  const box = $("changelog"); box.textContent = "";
+  for (const c of CHANGELOG) {
+    const h = document.createElement("h4"); h.innerHTML = "<span></span>"; h.firstChild.textContent = "v" + c.v; h.append(c.d);
+    const ul = document.createElement("ul");
+    c.items.forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.append(li); });
+    box.append(h, ul);
+  }
+}
+
+/* ---------- Hors ligne & mise à jour automatique ---------- */
+function netState(){ $("offline").hidden = navigator.onLine; }
+addEventListener("online", netState); addEventListener("offline", netState);
+
+if ("serviceWorker" in navigator) {
+  let reloading = false;
+  const hadController = !!navigator.serviceWorker.controller; // première visite : pas de rechargement
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloading || !hadController) return; reloading = true;
+    try { sessionStorage.setItem("leplein.updated", "1"); } catch {}
+    location.reload();
+  });
+  navigator.serviceWorker.register("sw.js").then(reg => {
+    const push = w => { if (w && navigator.serviceWorker.controller) w.postMessage("skipWaiting"); };
+    if (reg.waiting) push(reg.waiting);
+    reg.addEventListener("updatefound", () => {
+      const w = reg.installing;
+      w.addEventListener("statechange", () => { if (w.state === "installed") push(w); });
+    });
+    const check = () => { if (navigator.onLine) reg.update().catch(() => {}); };
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") check(); });
+    setInterval(check, 30 * 60 * 1000);
+  }).catch(() => {});
+}
+
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { render(); tick(); } });
+
+/* ---------- Démarrage ---------- */
+renderChangelog(); renderDrinks(); render(); netState();
+setInterval(tick, 30000); tick();
+try {
+  if (sessionStorage.getItem("leplein.updated")) {
+    sessionStorage.removeItem("leplein.updated");
+    toast("Mise à jour installée : version " + APP_VERSION);
+  }
+} catch {}
+</script>
+</body>
+</html>
