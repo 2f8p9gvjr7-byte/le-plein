@@ -147,6 +147,27 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
 .fracs button{flex:1;height:40px;border-radius:11px;background:var(--card);border:1px solid var(--line);font:700 16px var(--sans);color:var(--muted)}
 .fracs button[data-f="1"]{font-size:13px}
 .fracs button.on{border-color:var(--green);color:var(--green)}
+.dlist{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.drow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--line)}
+.drow:first-child{border-top:0}
+.drow .dot{width:30px;height:30px}
+.drow .t{flex:1;min-width:0}
+.drow .t b{display:block;font-size:14px}
+.drow .t small{color:var(--faint);font-size:11.5px}
+.drow .edit{color:var(--amber);font-weight:600;font-size:13px;padding:6px 8px}
+.drow input[type=checkbox]{appearance:none;-webkit-appearance:none;width:44px;height:26px;border-radius:26px;background:var(--card-hi);position:relative;transition:background .2s;flex:none}
+.drow input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
+.drow input[type=checkbox]:checked{background:var(--green)}
+.drow input[type=checkbox]:checked::after{transform:translateX(18px)}
+.picker{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.picker button{height:50px;border-radius:12px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center}
+.picker button svg{width:24px;height:28px}
+.picker button.on{border-color:var(--amber);background:var(--card-hi)}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.swatches button{width:34px;height:34px;border-radius:50%;border:3px solid transparent;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+.swatches button.on{border-color:#fff}
+.dr-preview{display:flex;justify-content:center;margin:4px 0 2px}
+.dr-preview svg{width:52px;height:60px}
 #sh-add:not(.editing) .edit-only{display:none}
 #sh-add.editing .edit-only{display:grid}
 #sh-add.editing #e-del{display:flex}
@@ -324,6 +345,13 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
     </div>
 
     <div class="group" style="margin-top:16px">
+      <div class="lbl" style="margin-bottom:6px">Mes boissons</div>
+      <p class="hint" style="margin:0 0 10px">Décoche celles que tu ne bois jamais, ou crée les tiennes.</p>
+      <div class="dlist" id="dlist"></div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:10px" id="s-newdrink">＋ Créer une boisson</button>
+    </div>
+
+    <div class="group" style="margin-top:16px">
       <div class="lbl" style="margin-bottom:10px">Sauvegarde</div>
       <div class="stack">
         <button class="btn btn-ghost" id="s-export">Exporter mes données</button>
@@ -336,14 +364,40 @@ input[type=range]{width:100%;accent-color:var(--amber);height:28px}
   </div>
 </div>
 
+<!-- Feuille : boisson personnalisée -->
+<div class="backdrop" id="sh-drink" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dr-title">
+    <div class="grab"></div>
+    <div class="dr-preview" id="dr-preview"></div>
+    <h2 id="dr-title" style="text-align:center">Nouvelle boisson</h2>
+    <p class="hint" style="text-align:center">Elle apparaîtra avec les autres sur l'écran principal.</p>
+    <div class="field"><label class="lbl" for="dr-name">Nom</label><input id="dr-name" type="text" maxlength="14" placeholder="ex. Eau gazeuse" style="font-family:var(--sans)"></div>
+    <div class="field"><span class="lbl" style="display:block;margin-bottom:6px">Forme</span><div class="picker" id="dr-shapes"></div></div>
+    <div class="field"><span class="lbl" style="display:block;margin-bottom:6px">Couleur</span><div class="swatches" id="dr-colors"></div></div>
+    <div class="field-row">
+      <div class="field"><label class="lbl" for="dr-k">Hydratation</label>
+        <select id="dr-k"><option value="1">100 %</option><option value="0.9">90 %</option><option value="0.8">80 %</option><option value="0.6">60 %</option><option value="0.5">50 %</option></select></div>
+      <div class="field"><label class="lbl" for="dr-def">Quantité (ml)</label><input id="dr-def" type="number" inputmode="numeric" min="10" max="1000" step="5"></div>
+    </div>
+    <p class="hint" style="margin:-6px 0 14px">Repères : eau, tisane, eau gazeuse 100 % · thé, jus, lait 90 % · café 80 % · smoothie 60 % · bière 50 %.</p>
+    <button class="btn btn-amber" style="width:100%" id="dr-save">Enregistrer</button>
+    <button class="btn btn-danger" style="width:100%;margin-top:10px" id="dr-del" hidden>Supprimer cette boisson</button>
+  </div>
+</div>
+
 <div id="toasts"></div>
 
 <script>
 "use strict";
 /* ====== Version & journal des modifications ======
    À chaque modification : augmente APP_VERSION (et VERSION dans sw.js), ajoute une entrée en haut de CHANGELOG. */
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.3.0";
 const CHANGELOG = [
+  { v: "1.3.0", d: "01/11/2026", items: [
+    "Mes boissons : crée tes propres boissons (nom, forme, couleur, part d'hydratation, quantité habituelle)",
+    "Masque les boissons que tu ne bois jamais pour alléger l'écran",
+    "Modifie ou supprime une boisson créée, sans perdre ton historique"
+  ]},
   { v: "1.2.0", d: "01/11/2026", items: [
     "Touche une prise du journal pour corriger sa quantité, sa boisson ou son heure, ou pour la supprimer",
     "Boutons ¼, ½, ¾ pour noter un verre ou une tasse pas finis",
@@ -370,7 +424,7 @@ const CHANGELOG = [
 
 const $ = id => document.getElementById(id);
 const STORE = "leplein.v1";
-const DRINKS = [
+const BASE_DRINKS = [
   { id:"eau",      n:"Eau",      c:"#5dade2", k:1,  def:250, max:1000, p:[[150,"Petit verre"],[250,"Verre"],[330,"Grand verre"],[500,"Bouteille"],[750,"Gourde"]] },
   { id:"the",      n:"Thé",      c:"#7fd8a8", k:.9, def:250, max:600,  p:[[150,"Tasse"],[250,"Mug"],[350,"Grand mug"],[500,"Théière"]] },
   { id:"infusion", n:"Infusion", c:"#c3a3e6", k:1,  def:250, max:600,  p:[[150,"Tasse"],[250,"Mug"],[350,"Grand mug"],[500,"Théière"]] },
@@ -380,15 +434,28 @@ const DRINKS = [
   { id:"soda",     n:"Soda",     c:"#e85d4f", k:.9, def:330, max:750,  p:[[150,"Mini"],[250,"Petite"],[330,"Canette"],[500,"Bouteille"]] },
   { id:"soupe",    n:"Soupe",    c:"#e8c547", k:.9, def:250, max:600,  p:[[150,"Tasse"],[250,"Bol"],[350,"Grand bol"]] }
 ];
-const D = Object.fromEntries(DRINKS.map(d => [d.id, d]));
+let DRINKS = [], D = {};
+const COLORS = ["#5dade2","#7fd8a8","#c3a3e6","#9a6646","#eae6dc","#f5a623","#e85d4f","#e8c547","#6fc3df","#f0b97a"];
+const SHAPES = [["eau","Verre"],["the","Tasse"],["cafe","Gobelet"],["lait","Bouteille"],["jus","Paille"],["soda","Canette"],["soupe","Bol"]];
+// Drinks personnalisées : { id, n, c, k, def, icon, custom:true, gone? }
+function refreshDrinks(){
+  const custom = (S.custom || []).map(x => {
+    const like = BASE_DRINKS.find(b => b.id === x.icon) || BASE_DRINKS[0];
+    return Object.assign({}, x, { max: Math.max(like.max, x.def * 2), p: like.p });
+  });
+  DRINKS = BASE_DRINKS.concat(custom);
+  D = Object.fromEntries(DRINKS.map(d => [d.id, d]));
+}
+const visibleDrinks = () => DRINKS.filter(d => !d.gone && !(S.hidden || []).includes(d.id));
 
 /* ---------- Données ---------- */
 function load(){
   let s = null;
   try { s = JSON.parse(localStorage.getItem(STORE)); } catch {}
-  return Object.assign({ goal:2000, weight:"", act:"0", from:"08:00", to:"21:00", every:90, notif:false, last:{}, log:{}, notified:0 }, s || {});
+  return Object.assign({ goal:2000, weight:"", act:"0", from:"08:00", to:"21:00", every:90, notif:false, last:{}, log:{}, notified:0, hidden:[], custom:[] }, s || {});
 }
 let S = load();
+refreshDrinks();
 function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch {} }
 const dayKey = (d = new Date()) => d.toLocaleDateString("sv-SE");
 const fmt = n => Math.round(n).toLocaleString("fr-FR");
@@ -398,6 +465,7 @@ const totalOf = arr => arr.reduce((a, e) => a + eff(e), 0);
 
 /* ---------- Icônes de boissons ---------- */
 function glyph(id, c){
+  if (D[id] && D[id].icon) id = D[id].icon;
   const shapes = {
     eau:      '<path d="M7 5h20l-3 30H10z" fill="none" stroke="'+c+'" stroke-width="2.4" stroke-linejoin="round"/><path d="M9 16h16l-1.9 17H10.9z" fill="'+c+'"/>',
     the:      '<path d="M5 14h20v10a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8z" fill="'+c+'"/><path d="M25 17h2a4 4 0 0 1 0 8h-2" fill="none" stroke="'+c+'" stroke-width="2.4"/><path d="M15 4v7m0 0-3 3h6z" stroke="'+c+'" stroke-width="1.8" fill="'+c+'"/>',
@@ -414,7 +482,7 @@ function glyph(id, c){
 /* ---------- Rendu ---------- */
 function renderDrinks(){
   const g = $("drinks"); g.textContent = "";
-  for (const d of DRINKS) {
+  for (const d of visibleDrinks()) {
     const b = document.createElement("button"); b.className = "drink";
     b.innerHTML = glyph(d.id, d.c) + "<span></span><small></small>";
     b.children[1].textContent = d.n;
@@ -588,7 +656,7 @@ function openAdd(type, entry){
     base = editing.base || editing.ml; frac = editing.frac || 1;
     $("add-range").value = editing.ml;
     const sel = $("e-type"); sel.textContent = "";
-    DRINKS.forEach(x => { const o = document.createElement("option"); o.value = x.id; o.textContent = x.n; sel.append(o); });
+    DRINKS.filter(x => x.id === type || visibleDrinks().includes(x)).forEach(x => { const o = document.createElement("option"); o.value = x.id; o.textContent = x.n; sel.append(o); });
     sel.value = type;
     const t = new Date(editing.ts);
     $("e-time").value = String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0");
@@ -634,8 +702,79 @@ function closeSheet(id){ $(id).hidden = true; document.body.style.overflow = "";
 document.querySelectorAll(".backdrop").forEach(b => b.addEventListener("click", e => { if (e.target === b) closeSheet(b.id); }));
 document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".backdrop:not([hidden])").forEach(b => closeSheet(b.id)); });
 
+/* ---------- Mes boissons ---------- */
+function renderDrinkList(){
+  const box = $("dlist"); box.textContent = "";
+  for (const d of DRINKS.filter(x => !x.gone)) {
+    const r = document.createElement("div"); r.className = "drow";
+    r.innerHTML = '<div class="dot" style="background:' + d.c + '22">' + glyph(d.id, d.c) + '</div><div class="t"><b></b><small></small></div>';
+    r.querySelector("b").textContent = d.n;
+    r.querySelector("small").textContent = Math.round(d.k * 100) + " % · " + (S.last[d.id] || d.def) + " ml" + (d.custom ? " · perso" : "");
+    if (d.custom) {
+      const e = document.createElement("button"); e.className = "edit"; e.textContent = "Modifier";
+      e.addEventListener("click", () => openDrinkEditor(d.id)); r.append(e);
+    }
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = !S.hidden.includes(d.id);
+    cb.setAttribute("aria-label", "Afficher " + d.n);
+    cb.addEventListener("change", () => {
+      if (!cb.checked && visibleDrinks().length <= 1) { cb.checked = true; toast("Garde au moins une boisson"); return; }
+      S.hidden = S.hidden.filter(x => x !== d.id); if (!cb.checked) S.hidden.push(d.id);
+      save(); renderDrinks();
+    });
+    r.append(cb); box.append(r);
+  }
+}
+let drEdit = null, drShape = "eau", drColor = COLORS[8];
+function drPreview(){ $("dr-preview").innerHTML = glyph(drShape, drColor); }
+function openDrinkEditor(id){
+  drEdit = id || null;
+  const d = id ? D[id] : null;
+  $("dr-title").textContent = d ? "Modifier la boisson" : "Nouvelle boisson";
+  $("dr-name").value = d ? d.n : "";
+  drShape = d ? d.icon : "eau"; drColor = d ? d.c : COLORS[8];
+  $("dr-k").value = String(d ? d.k : 1);
+  $("dr-def").value = d ? (S.last[d.id] || d.def) : 250;
+  $("dr-del").hidden = !d;
+  const sh = $("dr-shapes"); sh.textContent = "";
+  SHAPES.forEach(([k, label]) => {
+    const b = document.createElement("button"); b.innerHTML = glyph(k, "#a0b0c8"); b.setAttribute("aria-label", label);
+    b.classList.toggle("on", k === drShape);
+    b.addEventListener("click", () => { drShape = k; sh.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); drPreview(); });
+    sh.append(b);
+  });
+  const sw = $("dr-colors"); sw.textContent = "";
+  COLORS.forEach(c => {
+    const b = document.createElement("button"); b.style.background = c; b.setAttribute("aria-label", "Couleur " + c);
+    b.classList.toggle("on", c === drColor);
+    b.addEventListener("click", () => { drColor = c; sw.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); drPreview(); });
+    sw.append(b);
+  });
+  drPreview(); openSheet("sh-drink");
+}
+$("s-newdrink").addEventListener("click", () => openDrinkEditor());
+$("dr-save").addEventListener("click", () => {
+  const n = $("dr-name").value.trim();
+  if (!n) { toast("Donne un nom à ta boisson"); $("dr-name").focus(); return; }
+  const def = Math.min(1000, Math.max(10, Math.round((parseInt($("dr-def").value, 10) || 250) / 5) * 5));
+  const data = { n, c: drColor, icon: drShape, k: +$("dr-k").value, def, custom: true };
+  if (drEdit) { Object.assign(S.custom.find(x => x.id === drEdit), data); S.last[drEdit] = def; }
+  else { const id = "perso-" + Date.now().toString(36); S.custom.push(Object.assign({ id }, data)); S.last[id] = def; }
+  save(); refreshDrinks(); renderDrinks(); renderDrinkList(); render();
+  $("sh-drink").hidden = true; toast(drEdit ? "Boisson modifiée" : n + " ajoutée");
+});
+$("dr-del").addEventListener("click", () => {
+  if (!drEdit || !confirm("Supprimer « " + D[drEdit].n + " » ? Les prises déjà notées restent dans ton historique.")) return;
+  const used = Object.values(S.log).some(a => a.some(e => e.type === drEdit));
+  if (used) S.custom.find(x => x.id === drEdit).gone = true;   // gardée pour l'historique
+  else S.custom = S.custom.filter(x => x.id !== drEdit);
+  S.hidden = S.hidden.filter(x => x !== drEdit);
+  save(); refreshDrinks(); renderDrinks(); renderDrinkList(); render();
+  $("sh-drink").hidden = true; toast("Boisson supprimée");
+});
+
 /* ---------- Réglages ---------- */
 $("b-settings").addEventListener("click", () => {
+  renderDrinkList();
   $("s-goal").value = S.goal; $("s-weight").value = S.weight; $("s-act").value = S.act;
   $("s-from").value = S.from; $("s-to").value = S.to; $("s-every").value = S.every; $("s-notif").checked = S.notif;
   openSheet("sh-set");
@@ -702,7 +841,7 @@ $("s-file").addEventListener("change", async e => {
   try {
     const d = JSON.parse(await f.text());
     if (!d || typeof d.log !== "object") throw 0;
-    S = Object.assign(load(), d); save(); closeSheet("sh-set"); renderDrinks(); render(); toast("Sauvegarde importée");
+    S = Object.assign(load(), d); save(); refreshDrinks(); closeSheet("sh-set"); renderDrinks(); render(); toast("Sauvegarde importée");
   } catch { toast("Fichier non reconnu"); }
   e.target.value = "";
 });
